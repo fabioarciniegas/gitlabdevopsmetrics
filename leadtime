@@ -4,10 +4,11 @@ NC='\033[0m' # No Color
 verbose=0
 project_name="other"
 git_url="some"
-while getopts "h?v?g:p:" opt; do
+milestone=""
+while getopts "h?v?g:p:m:" opt; do
     case "$opt" in
     h|\?)
-	printf "${PURPLE}leadtime [options] -g <git server url> -p <project name or number>${NC}\n" 1>&2 
+	printf "${PURPLE}leadtime [options] -g <git server url> -p <project number>${NC} {-m milestone}\n" 1>&2 
 	printf "Report create and closed times for each closed issue\n" 1>&2 
 	printf "Options:\n" 1>&2 
 	printf "   -v : Verbose mode\n" 1>&2 
@@ -20,14 +21,19 @@ while getopts "h?v?g:p:" opt; do
     n)  force_login=0
         ;;
     p) project_name="$OPTARG";;
+    m) milestone="$OPTARG";;    
     g) git_url="$OPTARG";;    
     esac
 done
 
+
 printf "id,created,closed,description,assignee,state,labels\n"
 url="$git_url/api/v4/projects/$project_name"
-if [ $verbose -eq 1 ]; then  printf "${PURPLE} using API endpoint $url ${NC}\n" 1>&2 ; fi
-curl -I -N -s -k --header "PRIVATE-TOKEN: $GIT_AUTH_TOKEN" "$url/issues?scope=all&per_page=100&state=closed" > .leadtime_headers.txt
+API_CALL="$url/issues?scope=all&per_page=100&state=closed"
+if [ $verbose -eq 1 -a "$milestone" ]; then  printf "${PURPLE} filtering to milestone \"$milestone\" ${NC}\n" 1>&2 ; fi
+
+if [ $verbose -eq 1 ]; then  printf "${PURPLE} using API endpoint $API_CALL ${NC}\n" 1>&2 ; fi
+curl -I -N -s -k -G --header "PRIVATE-TOKEN: $GIT_AUTH_TOKEN" $API_CALL --data-urlencode "milestone=$milestone" > .leadtime_headers.txt
 
 num_pages=`cat .leadtime_headers.txt | grep "X-Total-Pages:" | tr -d '\r' | sed -En 's/^X-Total-Pages: ([0-9]*)/\1/p'`
 
@@ -36,7 +42,7 @@ num_issues=`cat .leadtime_headers.txt | grep "X-Total:" | tr -d '\r' | sed -En '
 if [ $verbose -eq 1 ]; then  printf "${PURPLE} $num_issues matching issues divided in $num_pages pages of size 100. ${NC}\n" 1>&2 ; fi
 
 for page in $(seq 1 $END); do
-    issues=`curl -s -N -k --header "PRIVATE-TOKEN: $GIT_AUTH_TOKEN" "$url/issues?scope=all&per_page=100&page=$page&state=closed" | jq -r '.[] | .iid'`
+    issues=`curl -s -G -N -k --header "PRIVATE-TOKEN: $GIT_AUTH_TOKEN" "$API_CALL&page=$page" --data-urlencode "milestone=$milestone" | jq -r '.[] | .iid'`
 
     for i in $issues	     
     do
