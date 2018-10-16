@@ -27,9 +27,9 @@ while getopts "h?v?g:p:m:" opt; do
 done
 
 
-printf "id,created,closed,description,assignee,state,labels\n"
+printf "id,created,closed,description,assignee,state,labels,milestone\n"
 url="$git_url/api/v4/projects/$project_name"
-API_CALL="$url/issues?scope=all&per_page=100&state=closed"
+API_CALL="$url/issues?scope=all&per_page=100&state=closed&-label=large"
 if [ $verbose -eq 1 -a "$milestone" ]; then  printf "${PURPLE} filtering to milestone \"$milestone\" ${NC}\n" 1>&2 ; fi
 
 if [ $verbose -eq 1 ]; then  printf "${PURPLE} using API endpoint $API_CALL ${NC}\n" 1>&2 ; fi
@@ -50,7 +50,7 @@ for page in $(seq 1 $END); do
 	
 	issue=`curl -s -N -k --header "PRIVATE-TOKEN: $GIT_AUTH_TOKEN" $url/issues/$i`
 	if [ $verbose -eq 1 ]; then  printf "${PURPLE} $issue ${NC}\n" 1>&2 ; fi
-	echo $issue | jq -r '(.iid|tostring)+","+(.created_at | split("T")[0])+","+(.updated_at | split("T")[0])+","+(.title)+","+(.assignee.name)+","+(.state)+","+(.labels|tostring)'
+	echo $issue | jq -r '(.iid|tostring)+","+(.created_at | split("T")[0])+","+(.updated_at | split("T")[0])+","+(.title)+","+(.assignee.name)+","+(.state)+","+(.labels[0]|tostring)+","+(.milestone.title)'
 	
     done
 done
