@@ -1,0 +1,1 @@
+CREATE USER 'devsecops'@'localhost' IDENTIFIED BY 'REPLACE_PASSWORD_HERE!';
