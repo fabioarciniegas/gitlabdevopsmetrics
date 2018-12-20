@@ -29,7 +29,7 @@ done
 
 printf "id,created,closed,description,assignee,state,labels,milestone\n"
 url="$git_url/api/v4/projects/$project_name"
-API_CALL="$url/issues?scope=all&per_page=100&state=closed&-label=large"
+API_CALL="$url/issues?scope=all&per_page=100&status=opened&-label=large"
 if [ $verbose -eq 1 -a "$milestone" ]; then  printf "${PURPLE} filtering to milestone \"$milestone\" ${NC}\n" 1>&2 ; fi
 
 if [ $verbose -eq 1 ]; then  printf "${PURPLE} using API endpoint $API_CALL ${NC}\n" 1>&2 ; fi
