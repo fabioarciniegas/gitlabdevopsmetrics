@@ -96,7 +96,8 @@ cat all_issues.json | jq '.[.state] | .id' | wc -l > issues
  - Detection of basic "gaming" strategies not implemented (unassign, close, recreate, assign)
  - Conversion between json and csv is not production-level (consider tag: "let,me,hack,you")
 
-#Remote Git branches and the last commit date for each branch. Sort by most recent commit date.
+#
+Remote Git branches and the last commit date for each branch. Sort by most recent commit date.
 
 ``` 
 for branch in `git branch -r | grep -v HEAD`;do echo -e `git show --format="%ci %cr" $branch | head -n 1` \\t$branch; done | sort -r
